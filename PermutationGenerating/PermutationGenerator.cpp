@@ -96,5 +96,17 @@ void PermutationGenerator::dec_carrying(string output_file){
 }
 
 void PermutationGenerator::swapping(string output_file){
-
+    char* c = new char[n]; //构造初始排列
+    for(int i = 0; i < n; i++) {
+        c[i] = C[i+1];
+    }
+    c[n] = '\0';
+    ChangeCarryNumber x = ChangeCarryNumber(n, DEC);
+    x.fromPermutation(c, 'n');
+    cout << c << endl;
+    for(int i = 1; i < fac[n]; i++) {
+        ++x;
+        char* next = x.toPermutation('n');
+        cout << next << endl;
+    }
 }

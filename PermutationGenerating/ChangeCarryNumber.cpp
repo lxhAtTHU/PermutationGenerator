@@ -89,14 +89,43 @@ void ChangeCarryNumber::fromPermutation(char p[], char algo) { //从排列生成
                     number[N-num] = cnt;
                     break;
                 case 'n': //【邻位对换法'n'】
-                    //to be continued...
                     break;
-                    
                 default:
-                    
                     cout << "Wrong Input (algo) in fromPermutation()!" << endl;
                     break;
             }
+        }
+    }
+    if(algo == 'n') {
+        bool d[N+1]; //记录每一个数字k的方向d[k]，false为左，true为右
+        memset(d, 0, sizeof(d));
+        int pos[N+1]; //记录每一个数字k对应的下标pos[k]，如pos[2]代表'b'对应的下标方便之后计算中介数
+        for(int i = 0; i < N; i++) { //扫描排列p的每一个位置i
+            pos[p[i]-C[0]] = i; //下标pos[k]越小，说明该数字k越靠左
+        }
+        //计算中介数中的b2
+        if(pos[2] < pos[1]) number[N-2] = 1;
+        else number[N-2] = 0;
+        for(int i = 2; i < N; i++) {
+            int k = i+1; //当前考虑数字k
+            int bk_1 = number[N-(k-1)]; //中介数中的b_(k-1)
+            if((k & 1) == 1) { //(k&1)==1表示k是奇数
+                if((bk_1 & 1) == 1) d[k] = 1; //如果b_(k-1)为奇，则k的方向向右。默认向左
+            } else {
+                int bk_2 = number[N-(k-2)]; //中介数中的b_(k-2)
+                if((bk_1 + bk_2 & 1) == 1) d[k] = 1; //如果b_(k-1)+b_(k-2)为奇，则k的方向向右
+            }
+            int cnt = 0;
+            if(d[k]) { //数字k的方向朝右，则看它左边比它小的数有几个
+                for(int j = 0; j < pos[k]; j++) {
+                    if(p[j]-C[0] < k) cnt++;
+                }
+            } else {
+                for(int j = pos[k]+1; j < N; j++) {
+                    if(p[j]-C[0] < k) cnt++;
+                }
+            }
+            number[N-k] = cnt;
         }
     }
 }
@@ -171,7 +200,57 @@ char* ChangeCarryNumber::toPermutation(char algo) { //从中介数生成排列
         }
             break;
         case 'n': //【邻位对换法'n'】
-            //to be continued...
+        {
+            for(int k = N; k > 1; k--) { //对于从N到2的每一个数k
+                int bk = number[N-k];
+                int bk_1 = number[N-(k-1)];
+                int emptyCnt = 0;
+                if((k & 1) == 1) { //若k为奇，则看b_(k-1)
+                    if((bk_1 & 1) == 1) { //若为奇，则k的方向向右，将其填到 向右第b_k + 1个空
+                        for(int j = 0; j < N; j++) {
+                            if(p[j] == '\0') emptyCnt++;
+                            if(emptyCnt == bk + 1) {
+                                p[j] = C[k];
+                                break;
+                            }
+                        }
+                    } else { //否则，将其填到 向左第b_k + 1个
+                        for(int j = N-1; j >= 0; j--) {
+                            if(p[j] == '\0') emptyCnt++;
+                            if(emptyCnt == bk + 1) {
+                                p[j] = C[k];
+                                break;
+                            }
+                        }
+                    }
+                } else { //若k为偶，则看b_(k-1)+b_(k-2)
+                    int bk_2 = number[N-(k-2)];
+                    if((bk_1 + bk_2 & 1) == 1) {
+                        for(int j = 0; j < N; j++) {
+                            if(p[j] == '\0') emptyCnt++;
+                            if(emptyCnt == bk + 1) {
+                                p[j] = C[k];
+                                break;
+                            }
+                        }
+                    } else {
+                        for(int j = N-1; j >= 0; j--) {
+                            if(p[j] == '\0') emptyCnt++;
+                            if(emptyCnt == bk + 1) {
+                                p[j] = C[k];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            for(int i = 0; i < N; i++) {
+                if(p[i] == '\0') {
+                    p[i] = C[1];
+                    break;
+                }
+            }
+        }
             break;
             
         default:
