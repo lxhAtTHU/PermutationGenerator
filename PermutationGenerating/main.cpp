@@ -13,7 +13,7 @@ int main() {
     //pg.generate_permutations(PermutationGenerator::INCREMENTAL_CARRYING, "bbbb");
     //pg.generate_permutations(PermutationGenerator::DECREMENTAL_CARRYING, "bbbb");
     //pg.generate_permutations(PermutationGenerator::MEDIATOR_LEXICOHRAPHIC, "bbbb");
-    pg.generate_permutations(PermutationGenerator::SWAPPING, "bbbb");
+    pg.generate_permutations(PermutationGenerator::SWAPPING, "swapping.txt");
     
     int N = 8;
     ChangeCarryNumber x = ChangeCarryNumber(N, DEC);
