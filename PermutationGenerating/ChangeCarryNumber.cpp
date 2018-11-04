@@ -93,18 +93,64 @@ void ChangeCarryNumber::fromPermutation(char p[], char algo) { //从排列生成
                     break;
                     
                 default:
-                    cout << "Wrong Input in fromPermutation()" << endl;
+                    cout << "Wrong Input (algo) in fromPermutation()!" << endl;
                     break;
             }
         }
     }
 }
 
-
-
 char* ChangeCarryNumber::toPermutation(char algo) { //从中介数生成排列
     int N = get_N();
     char* p = new char[N];
-    
+    memset(p, 0, sizeof(p)+1); //初始全部置为'\0'，且p[N]作为字符串终止符也置为'\0'
+    switch (algo) {
+        case 'l': //【字典序法'l'】
+            // to be continued..
+            break;
+        case 'i': //【递增进位制数法'i'】
+            for(int i = N-2; i >= 0; i--) { //对中介数的每一位，从aN到a2
+                int emptyCnt = 0;
+                for(int j = N-1; j >= 0; j--) { //扫描当前排列p
+                    if(p[j] == '\0') emptyCnt++;
+                    if(emptyCnt == number[i] + 1) {
+                        p[j] = C[i+2];
+                        break;
+                    }
+                }
+            }
+            for(int j = N-1; j >= 0; j--) { //填上没有中介数对应的'1'
+                if(p[j] == '\0') {
+                    p[j] = C[1];
+                    break;
+                }
+            }
+            break;
+        case 'd': //【递减进位制数法'd'】
+            for(int i = 0; i < N-1; i++) { //对中介数的每一位，从aN到a2
+                int emptyCnt = 0;
+                for(int j = N-1; j >= 0; j--) { //扫描当前排列p
+                    if(p[j] == '\0') emptyCnt++;
+                    if(emptyCnt == number[i] + 1) {
+                        p[j] = C[N-i];
+                        break;
+                    }
+                }
+            }
+            for(int j = N-1; j >= 0; j--) { //填上没有中介数对应的'1'
+                if(p[j] == '\0') {
+                    p[j] = C[1];
+                    break;
+                }
+            }
+            break;
+        case 'n': //【邻位对换法'n'】
+            //to be continued...
+            break;
+            
+        default:
+            cout << "Wrong Input (algo) in toPermutation()!" << endl;
+            break;
+    }
     return p;
 }

@@ -16,6 +16,9 @@ using namespace std;
 #define DEC 101
 #define MAX_LEN 10
 
+const char C[MAX_LEN] = {'$', '1', '2', '3', '4', '5', '6', '7', '8', '9'}; //便于生成排列
+const int fac[MAX_LEN] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880}; //便于生成n!个排列
+
 class ChangeCarryNumber
 {
 private:
@@ -28,7 +31,7 @@ private:
         if(mode == INC) {
             for(int i = 0; i < N-1; i++) carry[i] = i + 1;
         } else if(mode == DEC) {
-            for(int i = 0; i < N-1; i++) carry[i] = 10 - i;
+            for(int i = 0; i < N-1; i++) carry[i] = N + 1 - i;
         }
     }
 public:
