@@ -14,9 +14,12 @@ using namespace std;
 
 #define INC 100
 #define DEC 101
-#define MAX_LEN 10
+#define MAX_LEN 20
 
-const char C[MAX_LEN] = {'$', '1', '2', '3', '4', '5', '6', '7', '8', '9'}; //便于生成排列
+const char C[MAX_LEN] = {
+    '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+}; //便于生成排列
 const int fac[MAX_LEN] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880}; //便于生成n!个排列
 
 class ChangeCarryNumber

@@ -48,11 +48,23 @@ void PermutationGenerator::SJT_method(string output_file){
 }
 
 void PermutationGenerator::mediator_lexi(string output_file){
-
+    char* c = new char[n]; //构造初始排列
+    for(int i = 0; i < n; i++) {
+        c[i] = C[i+1];
+    }
+    c[n] = '\0';
+    ChangeCarryNumber x = ChangeCarryNumber(n, INC);
+    x.fromPermutation(c, 'l');
+    cout << c << endl;
+    for(int i = 1; i < fac[n]; i++) {
+        ++x;
+        char* next = x.toPermutation('l');
+        cout << next << endl;
+    }
 }
 
 void PermutationGenerator::inc_carrying(string output_file){
-    char* c = new char[n];
+    char* c = new char[n]; //构造初始排列
     for(int i = 0; i < n; i++) {
         c[i] = C[i+1];
     }
@@ -68,19 +80,17 @@ void PermutationGenerator::inc_carrying(string output_file){
 }
 
 void PermutationGenerator::dec_carrying(string output_file){
-    char* c = new char[n];
+    char* c = new char[n]; //构造初始排列
     for(int i = 0; i < n; i++) {
         c[i] = C[i+1];
     }
     c[n] = '\0';
     ChangeCarryNumber x = ChangeCarryNumber(n, DEC);
     x.fromPermutation(c, 'd');
-    x.print();
     cout << c << endl;
-    for(int i = 1; i < 10; i++) {
+    for(int i = 1; i < fac[n]; i++) {
         ++x;
-        char* next = x.toPermutation('i');
-        x.print();
+        char* next = x.toPermutation('d');
         cout << next << endl;
     }
 }

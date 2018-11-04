@@ -48,7 +48,7 @@ ChangeCarryNumber ChangeCarryNumber::operator-(ChangeCarryNumber& b) {
 ChangeCarryNumber& ChangeCarryNumber::operator++() {
     this->number[0]++;
     int i = 0;
-    while(this->number[i] > carry[i]) {
+    while(this->number[i] == carry[i+1]) {
         this->number[i] = 0;
         this->number[i+1]++;
         i++;
@@ -72,10 +72,10 @@ ChangeCarryNumber& ChangeCarryNumber::operator=(const ChangeCarryNumber& b) {
 void ChangeCarryNumber::fromPermutation(char p[], char algo) { //从排列生成中介数，并更新本对象的number
     int N = get_N();
     for(int i = 0; i < N; i++) { //对于排列p的每一位，注意：排列"83674521"的p[0]='8'
-        int num = p[i] - '0'; //p[i]对应的数字，如p[i]='8'，则num=8
+        int num = p[i] - C[0]; //p[i]对应的数字，如p[i]='8'，则num=8
         if(num != 1) {
             int cnt = 0;
-            for(int j = i+1; j < N; j++) { //寻找它右边的数
+            for(int j = i+1; j < N; j++) { //寻找它右边比它小的数有几个
                 if(p[i] > p[j]) cnt++;
             }
             switch (algo) {
@@ -93,6 +93,7 @@ void ChangeCarryNumber::fromPermutation(char p[], char algo) { //从排列生成
                     break;
                     
                 default:
+                    
                     cout << "Wrong Input (algo) in fromPermutation()!" << endl;
                     break;
             }
@@ -106,9 +107,31 @@ char* ChangeCarryNumber::toPermutation(char algo) { //从中介数生成排列
     memset(p, 0, sizeof(p)+1); //初始全部置为'\0'，且p[N]作为字符串终止符也置为'\0'
     switch (algo) {
         case 'l': //【字典序法'l'】
-            // to be continued..
+        {
+            bool u[N]; //记录每一个数是否已存在于排列中，u[0]==true代表'a'已填入排列p
+            memset(u, 0, sizeof(u));
+            for(int i = 0; i < N-1; i++) { //依次填充排列p的每一位
+                int a = number[N-2-i]; //按字典序法的定义，p[i]的右边有a个数比它小
+                int cnt = 0;
+                for(int j = 0; j < N; j++) { //扫描所有数字，将第a+1个没有用过的数字填入p[i]
+                    if(!u[j]) cnt++;
+                    if(cnt == a+1) {
+                        p[i] = C[j+1];
+                        u[j] = true;
+                        break;
+                    }
+                }
+            }
+            for(int j = 0; j < N; j++) {
+                if(!u[j]) {
+                    p[N-1] = C[j+1];
+                    break;
+                }
+            }
+        }
             break;
         case 'i': //【递增进位制数法'i'】
+        {
             for(int i = N-2; i >= 0; i--) { //对中介数的每一位，从aN到a2
                 int emptyCnt = 0;
                 for(int j = N-1; j >= 0; j--) { //扫描当前排列p
@@ -125,8 +148,10 @@ char* ChangeCarryNumber::toPermutation(char algo) { //从中介数生成排列
                     break;
                 }
             }
+        }
             break;
         case 'd': //【递减进位制数法'd'】
+        {
             for(int i = 0; i < N-1; i++) { //对中介数的每一位，从aN到a2
                 int emptyCnt = 0;
                 for(int j = N-1; j >= 0; j--) { //扫描当前排列p
@@ -143,6 +168,7 @@ char* ChangeCarryNumber::toPermutation(char algo) { //从中介数生成排列
                     break;
                 }
             }
+        }
             break;
         case 'n': //【邻位对换法'n'】
             //to be continued...
