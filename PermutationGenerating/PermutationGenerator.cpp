@@ -10,6 +10,9 @@
 #include <time.h>
 using namespace std;
 
+#define LEFT false
+#define RIGHT true
+
 void PermutationGenerator::generate_permutations(int method, string output_file){
   switch (method){
     case PermutationGenerator::RECURSION:
@@ -108,8 +111,55 @@ void PermutationGenerator::classic_lexi(string output_file){
   close(fd);
 }
 
-void PermutationGenerator::SJT_method(string output_file){
+int moveable(char *x, bool *dirc, int n, int i){
+  if(i == 0 && dirc[i] == LEFT)
+    return -1;
+  if(i == n-1 && dirc[i] == RIGHT)
+    return -1;
 
+  if(dirc[i] == LEFT && x[i-1] < x[i])
+    return i-1;
+  if(dirc[i] == RIGHT && x[i] > x[i+1])
+    return i+1;
+
+  return -1;
+}
+
+void PermutationGenerator::SJT_method(string output_file){
+  char *x = new char[n+1]; // one more for '\n'
+  x[n] = '\n';
+  bool *dirc = new bool[n];
+  int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
+  for(int i=0; i<n; i++) {
+    x[i] = 'a' + i;
+    dirc[i] = LEFT;
+  }
+  write(fd, x, n+1);
+
+  while(true) {
+    int max_moveable_index = -1, sw_index = -1;
+    for (int i=0; i<n; i++) {
+      int t = moveable(x, dirc, n, i);
+      if (t != -1 && x[i] > x[max_moveable_index]) {
+        max_moveable_index = i;
+        sw_index = t;
+      }
+    }
+    if (max_moveable_index == -1)
+      break;
+
+    swap(x[max_moveable_index], x[sw_index]);
+    swap(dirc[max_moveable_index], dirc[sw_index]);
+    for(int i=0; i<n; i++){
+      if(x[i] > x[sw_index])
+        dirc[i] = !dirc[i];
+    }
+    write(fd, x, n+1);
+  }
+
+  delete []x;
+  delete []dirc;
+  close(fd);
 }
 
 string getTime()
