@@ -68,23 +68,21 @@ void mediator_generating(string output_file, int inc_or_dec, char algo, int n) {
     for(int i = 0; i < n; i++) {
         c[i] = C[i+1];
     }
-    c[n] = '\0';
+    c[n] = '\n';
     ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec);
     x.fromPermutation(c, algo);
-    cout << output_file << endl;
-    
-//    int fd = open("1.txt", O_WRONLY);
-    int fd = open(output_file.c_str(), O_WRONLY);
-    
+    int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
+
     time_t start, stop;
-    log("Outputing to file...");
+    log("Outputing to file " + output_file);
     start = time(NULL);
     
     //生成全排列
     write(fd, c, n+1);
-    for(int i = 1; i < fac[n]; i++) {
+    for(long long i = 1; i < fac[n]; i++) {
         ++x;
         char* next = x.toPermutation(algo);
+        next[n] = '\n';
         write(fd, next, n+1);
     }
     
