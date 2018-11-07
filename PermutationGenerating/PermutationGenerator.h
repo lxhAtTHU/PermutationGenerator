@@ -20,12 +20,13 @@ private:
     void inc_carrying(string output_file);
     void dec_carrying(string output_file);
     void swapping(string output_file);
+    void Heap_method(string output_file);
 
 
 public:
 
     enum method_type {RECURSION=1, CLASSIC_LEXICOGRAPHIC, SJT,
-                          MEDIATOR_LEXICOHRAPHIC, INCREMENTAL_CARRYING, DECREMENTAL_CARRYING, SWAPPING};
+                          MEDIATOR_LEXICOHRAPHIC, INCREMENTAL_CARRYING, DECREMENTAL_CARRYING, SWAPPING, HEAP};
 
     PermutationGenerator(int _n){
       n = _n;

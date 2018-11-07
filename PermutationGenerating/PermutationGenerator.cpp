@@ -8,12 +8,19 @@
 #include <unistd.h>
 #include <algorithm>
 #include <time.h>
+#include <ctime>
 using namespace std;
 
 #define LEFT false
 #define RIGHT true
 
+void log(string s);
+
+
 void PermutationGenerator::generate_permutations(int method, string output_file){
+    clock_t start, end;
+    start = clock();
+    
   switch (method){
     case PermutationGenerator::RECURSION:
       recursion(output_file);
@@ -36,9 +43,16 @@ void PermutationGenerator::generate_permutations(int method, string output_file)
     case PermutationGenerator::SWAPPING:
       swapping(output_file);
       break;
+    case PermutationGenerator::HEAP:
+      Heap_method(output_file);
+      break;
     default:
       printf("Invalid method.\n");
   }
+    
+    end = clock();
+    cout << output_file.substr(3) << ":\t\t"  << (double)(end - start) / CLOCKS_PER_SEC << "s" << endl;
+    
   return;
 }
 
@@ -156,7 +170,6 @@ void PermutationGenerator::SJT_method(string output_file){
     }
     write(fd, x, n+1);
   }
-
   delete []x;
   delete []dirc;
   close(fd);
@@ -183,11 +196,8 @@ void mediator_generating(string output_file, int inc_or_dec, char algo, int n) {
     c[n] = '\n';
     ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec);
     x.fromPermutation(c, algo);
+    delete []c;
     int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
-
-    time_t start, stop;
-    log("Outputing to file " + output_file);
-    start = time(NULL);
     
     //生成全排列
     write(fd, c, n+1);
@@ -197,10 +207,6 @@ void mediator_generating(string output_file, int inc_or_dec, char algo, int n) {
         next[n] = '\n';
         write(fd, next, n+1);
     }
-    
-    log("Finished!");
-    stop = time(NULL);
-    cout << "Use Time: " << (stop-start) << "ms" << endl;
     close(fd);
 }
 
@@ -218,4 +224,61 @@ void PermutationGenerator::dec_carrying(string output_file){
 
 void PermutationGenerator::swapping(string output_file){
     mediator_generating(output_file, DEC, 'n', n);
+}
+
+
+
+//void swap(char &x, char &y){
+//    char tmp = x;
+//    x = y;
+//    y = tmp;
+//}
+
+void Heap_step(char *x, int n, int len_of_x, int fd) {
+    int c = 0;
+    while(true) {
+        if(n > 2) Heap_step(x, n-1, len_of_x, fd);
+        if(n <= c+1) break;
+        else if ((n & 1) == 1) {
+            swap(x[0], x[n-1]);
+        } else {
+            swap(x[c], x[n-1]);
+        }
+        write(fd, x, len_of_x+1);
+        c++;
+    }
+}
+
+void PermutationGenerator::Heap_method(string output_file){
+    char *x = new char[n+1]; // one more for '\n'
+    x[n] = '\n';
+    for(int i = 0; i < n; ++i) {
+        x[i] = C[i+1];
+    }
+    
+    int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
+    write(fd, x, n+1); //original permutation
+    
+    //Heap_step(x, n, n, fd);
+    
+    int c[n];
+    memset(c, 0, sizeof(c));
+    int i = 0;
+    while(i < n) {
+        if(c[i] < i) {
+            if((i & 1) == 0)
+                swap(x[0], x[i]);
+            else
+                swap(x[c[i]], x[i]);
+            write(fd, x, n+1);
+            c[i]++;
+            i = 0;
+        } else {
+            c[i] = 0;
+            i += 1;
+        }
+    }
+    
+    delete []x;
+    close(fd);
 }
