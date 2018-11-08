@@ -19,44 +19,44 @@ using namespace std;
 void log(string s);
 
 
-void PermutationGenerator::generate_permutations(int method, string output_file){
+void PermutationGenerator::generate_permutations(int rank, int nprocs, int method, string output_file){
     clock_t start, end;
     start = clock();
     
   switch (method){
     case PermutationGenerator::RECURSION:
-      recursion(output_file);
+      recursion(rank, nprocs, output_file);
       break;
     case PermutationGenerator::CLASSIC_LEXICOGRAPHIC:
-      classic_lexi(output_file);
+      classic_lexi(rank, nprocs, output_file);
       break;
     case PermutationGenerator::SJT:
-      SJT_method(output_file);
+      SJT_method(rank, nprocs, output_file);
       break;
     case PermutationGenerator::MEDIATOR_LEXICOHRAPHIC:
-      mediator_lexi(output_file);
+      mediator_lexi(rank, nprocs, output_file);
       break;
     case PermutationGenerator::INCREMENTAL_CARRYING:
-      inc_carrying(output_file);
+      inc_carrying(rank, nprocs, output_file);
       break;
     case PermutationGenerator::DECREMENTAL_CARRYING:
-      dec_carrying(output_file);
+      dec_carrying(rank, nprocs, output_file);
       break;
     case PermutationGenerator::SWAPPING:
-      swapping(output_file);
+      swapping(rank, nprocs, output_file);
       break;
     case PermutationGenerator::HEAP:
-      Heap_method(output_file);
+      Heap_method(rank, nprocs, output_file);
       break;
     case PermutationGenerator::INTEGRATED:
-      integrated_method(output_file);
+      integrated_method(rank, nprocs, output_file);
       break;
     default:
       printf("Invalid method.\n");
   }
     
     end = clock();
-    cout << output_file.substr(3) << ":\t\t"  << (double)(end - start) / CLOCKS_PER_SEC << "s" << endl;
+    cout << output_file << ":\t\t"  << (double)(end - start) / CLOCKS_PER_SEC << "s" << endl;
     
   return;
 }
@@ -82,7 +82,7 @@ void recursion_step(char *x, bool *flag, int n, int depth, int fd){
   }
 }
 
-void PermutationGenerator::recursion(string output_file){
+void PermutationGenerator::recursion(int rank, int nprocs, string output_file){
   char *x = new char[n+1]; // one more for '\n'
   x[n] = '\n';
   bool *flag = new bool[n];
@@ -94,7 +94,7 @@ void PermutationGenerator::recursion(string output_file){
   close(fd);
 }
 
-void PermutationGenerator::classic_lexi(string output_file){
+void PermutationGenerator::classic_lexi(int rank, int nprocs, string output_file){
   char *x = new char[n+1]; // one more for '\n'
   x[n] = '\n';
   int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
@@ -144,7 +144,7 @@ int moveable(char *x, bool *dirc, int n, int i){
   return -1;
 }
 
-void PermutationGenerator::SJT_method(string output_file){
+void PermutationGenerator::SJT_method(int rank, int nprocs, string output_file){
   char *x = new char[n+1]; // one more for '\n'
   x[n] = '\n';
   bool *dirc = new bool[n];
@@ -193,7 +193,7 @@ void log(string s) {
     cout << "[" << getTime() << "] " << s << endl;
 }
 
-void mediator_generating(string output_file, int inc_or_dec, char algo, int n) {
+void mediator_generating(int rank, int nprocs, string output_file, int inc_or_dec, char algo, int n) {
     char* c = new char[n]; //构造初始排列
     for(int i = 0; i < n; i++) {
         c[i] = C[i+1];
@@ -215,20 +215,20 @@ void mediator_generating(string output_file, int inc_or_dec, char algo, int n) {
     close(fd);
 }
 
-void PermutationGenerator::mediator_lexi(string output_file){
-    mediator_generating(output_file, INC, 'l', n);
+void PermutationGenerator::mediator_lexi(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, INC, 'l', n);
 }
 
-void PermutationGenerator::inc_carrying(string output_file){
-    mediator_generating(output_file, INC, 'i', n);
+void PermutationGenerator::inc_carrying(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, INC, 'i', n);
 }
 
-void PermutationGenerator::dec_carrying(string output_file){
-    mediator_generating(output_file, DEC, 'd', n);
+void PermutationGenerator::dec_carrying(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, DEC, 'd', n);
 }
 
-void PermutationGenerator::swapping(string output_file){
-    mediator_generating(output_file, DEC, 'n', n);
+void PermutationGenerator::swapping(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, DEC, 'n', n);
 }
 
 
@@ -247,7 +247,7 @@ void Heap_step(char *x, int n, int len_of_x, int fd) {
     }
 }
 
-void PermutationGenerator::Heap_method(string output_file){
+void PermutationGenerator::Heap_method(int rank, int nprocs, string output_file){
     char *x = new char[n+1]; // one more for '\n'
     x[n] = '\n';
     for(int i = 0; i < n; ++i) {
@@ -283,7 +283,7 @@ void PermutationGenerator::Heap_method(string output_file){
 
 char starter[1814402][12];
 
-void PermutationGenerator::integrated_method(string output_file) {
+void PermutationGenerator::integrated_method(int rank, int nprocs, string output_file) {
     long long f = fac[n-1]/2;
 //    char starter[f][n+1];
     
