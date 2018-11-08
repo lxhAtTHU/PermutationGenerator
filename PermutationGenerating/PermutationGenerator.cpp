@@ -196,21 +196,27 @@ void log(string s) {
 void mediator_generating(int rank, int nprocs, string output_file, int inc_or_dec, char algo, int n) {
     char* c = new char[n]; //构造初始排列
     for(int i = 0; i < n; i++) {
-        c[i] = C[i+1];
+        c[i] = 'a'+i;
     }
     c[n] = '\n';
-    ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec);
-    x.fromPermutation(c, algo);
+
+	long long total = fac[n];
+	long long chunk = total/nprocs;
+	long long start = rank*chunk;
+	long long end = (rank == (nprocs-1))? total : (rank+1)*chunk;
+	
+	printf("%d of %d nprocs, %ld - %ld\n", rank, nprocs, start, end);
+    ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec, start);
+    //x.fromPermutation(c, algo);
     delete []c;
     int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
     
     //生成全排列
-    write(fd, c, n+1);
-    for(long long i = 1; i < fac[n]; i++) {
-        ++x;
+    //write(fd, c, n+1);
+    for(long long i = start; i < end; i++) {
         char* next = x.toPermutation(algo);
-        next[n] = '\n';
-        write(fd, next, n+1);
+        pwrite(fd, next, n+1, i*(n+1));
+		++x;
     }
     close(fd);
 }
