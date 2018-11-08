@@ -7,6 +7,7 @@
 //
 #include <iostream>
 #include <memory>
+#include <cstring>
 using namespace std;
 
 #ifndef ChangeCarryNumber_h

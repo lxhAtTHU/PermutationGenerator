@@ -13,15 +13,15 @@ private:
 
     int n;
 
-    void recursion(string output_file);
-    void classic_lexi(string output_file);
-    void SJT_method(string output_file);
-    void mediator_lexi(string output_file);
-    void inc_carrying(string output_file);
-    void dec_carrying(string output_file);
-    void swapping(string output_file);
-    void Heap_method(string output_file);
-    void integrated_method(string output_file);
+    void recursion(int rank, int nprocs, string output_file);
+    void classic_lexi(int rank, int nprocs, string output_file);
+    void SJT_method(int rank, int nprocs, string output_file);
+    void mediator_lexi(int rank, int nprocs, string output_file);
+    void inc_carrying(int rank, int nprocs, string output_file);
+    void dec_carrying(int rank, int nprocs, string output_file);
+    void swapping(int rank, int nprocs, string output_file);
+    void Heap_method(int rank, int nprocs, string output_file);
+    void integrated_method(int rank, int nprocs, string output_file);
 
 
 public:
@@ -33,7 +33,7 @@ public:
       n = _n;
     }
 
-    void generate_permutations(int method, string output_file);
+    void generate_permutations(int rank, int nprocs, int method, string output_file);
 
 
 };
