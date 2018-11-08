@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <cstring>
+#include <cstdio>
 using namespace std;
 
 #ifndef ChangeCarryNumber_h
@@ -38,27 +39,29 @@ private:
         mode = _mode;
         memset(number, 0, sizeof(number));
         if(mode == INC) {
-            for(int i = 0; i < N-1; i++) carry[i] = i + 1;
+            for(int i = 0; i < N; i++) carry[i] = i + 1;
         } else if(mode == DEC) {
-            for(int i = 0; i < N-1; i++) carry[i] = N + 1 - i;
+            for(int i = 0; i < N; i++) carry[i] = N + 1 - i;
         }
     }
 public:
     int number[MAX_LEN]; //进位制数，如递增进位制数a8a7...a2，由number[6]~number[0]存储
     int carry[MAX_LEN]; //每一位对应的进位数，如carry[1]为9表示最低位number[0]逢9进1
-    ChangeCarryNumber(int _N, int _mode) {
+    char p[MAX_LEN];
+	ChangeCarryNumber(int _N, int _mode) {
         init(_N, _mode);
     }
-    ChangeCarryNumber(int _N, int _mode, int ccn) { //通过中介数（int）产生中介数对象
+    ChangeCarryNumber(int _N, int _mode, long long ccn) { //通过十进制数（long long）产生中介数对象
         init(_N, _mode);
         int i = 0;
         while(ccn > 0) {
-            number[i] = ccn % 10;
-            ccn /= 10;
+            number[i] = ccn % (long long)carry[i+1];
+            ccn /= carry[i+1];
             i++;
         }
-    }
-    
+		printf("test\n");
+    }	
+ 
     //重要函数
     void fromPermutation(char p[], char algo); //从排列生成中介数，并更新本对象的number
     char* toPermutation(char algo); //从中介数生成排列
