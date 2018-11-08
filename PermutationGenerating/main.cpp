@@ -6,12 +6,13 @@ using namespace std;
 
 
 int main() {
-
-    for (int i = 5; i < 12; i++) {
+    
+    for (int i = 11; i < 12; i++) {
         cout << "================ N = " << i << " =================" << endl;
         PermutationGenerator pg(i);
-        pg.generate_permutations(PermutationGenerator::HEAP, "../heap.txt");
-        //return 0;
+        //pg.generate_permutations(PermutationGenerator::HEAP, "../heap.txt");
+        pg.generate_permutations(PermutationGenerator::INTEGRATED, "../integrated.txt");
+//        return 0;
 //        pg.generate_permutations(PermutationGenerator::CLASSIC_LEXICOGRAPHIC, "../classic_lexi.txt");
 //        pg.generate_permutations(PermutationGenerator::RECURSION, "../recursion.txt");
 //        pg.generate_permutations(PermutationGenerator::SJT, "../sjt.txt");

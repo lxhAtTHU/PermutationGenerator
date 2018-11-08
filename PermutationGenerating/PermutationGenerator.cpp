@@ -6,7 +6,9 @@
 #include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <algorithm>
+#include <cstring>
 #include <time.h>
 #include <ctime>
 using namespace std;
@@ -45,6 +47,9 @@ void PermutationGenerator::generate_permutations(int method, string output_file)
       break;
     case PermutationGenerator::HEAP:
       Heap_method(output_file);
+      break;
+    case PermutationGenerator::INTEGRATED:
+      integrated_method(output_file);
       break;
     default:
       printf("Invalid method.\n");
@@ -227,13 +232,6 @@ void PermutationGenerator::swapping(string output_file){
 }
 
 
-
-//void swap(char &x, char &y){
-//    char tmp = x;
-//    x = y;
-//    y = tmp;
-//}
-
 void Heap_step(char *x, int n, int len_of_x, int fd) {
     int c = 0;
     while(true) {
@@ -282,3 +280,127 @@ void PermutationGenerator::Heap_method(string output_file){
     delete []x;
     close(fd);
 }
+
+char starter[1814402][12];
+
+void PermutationGenerator::integrated_method(string output_file) {
+    long long f = fac[n-1]/2;
+//    char starter[f][n+1];
+    
+    memset(starter, 0, sizeof(starter));
+    for(long long i = 0; i < f; i++) {
+        starter[i][n] = '\0';
+    }
+    for(int i = 0; i < n; i++) {
+        starter[0][i] = C[i+1];
+    }
+    //cout << "starter[0]: " << starter[0] << endl;
+    int cnt = 1;
+    for(int k = n-3; k >= 1; k--) {
+        int current_cnt = cnt;
+        for(int j = 0; j < current_cnt; j++) {
+            strcpy(starter[cnt], starter[j]);
+            swap(starter[cnt][k], starter[cnt][k+1]);
+            //cout << "starter[" << cnt << "]: " << starter[cnt] << endl;
+            cnt++;
+            for(int i = k+1; i < n-1; i++) {
+                strcpy(starter[cnt], starter[cnt-1]);
+                swap(starter[cnt][i], starter[cnt][i+1]);
+                //cout << "starter[" << cnt << "]: " << starter[cnt] << endl;
+                cnt++;
+            }
+        }
+    }
+    
+    int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
+    //FILE *fp = freopen(output_file.c_str(), "w", stdout);
+    char *x = new char[n+1];
+    x[n] = '\n';
+    for(int k = 0; k < cnt; k++) {
+        for(int j = 0; j < n; j++) { //CP 初始位置
+            //【CP操作】
+            int i = j;
+            int l = 0;
+            do {
+                //putchar(starter[k][i]);
+                x[l++] = starter[k][i];
+                i++;
+                if(i >= n) i = 0;
+            } while(i != j);
+            //putchar('\n');
+            write(fd, x, n+1);
+            //【RoCP操作】
+            i = j;
+            l = 0;
+            do {
+                //putchar(starter[k][i]);
+                x[l++] = starter[k][i];
+                i--;
+                if(i < 0) i = n-1;
+            } while(i != j);
+            //putchar('\n');
+            write(fd, x, n+1);
+        }
+    }
+    //fclose(stdout);
+    //fflush(fp);
+    //fp = freopen("CON", "w", stdout);
+    //cout << "hello" << endl;
+}
+
+
+//void output(int a[]) {
+//
+//}
+//
+//void fast_generator(int n) {
+//    //initialization
+//    int P[n+1];  //P[1:n-1]
+//    int IP[n]; //IP[1:n-1]
+//    int T[n];  //T[1:n-1]
+//    int D[n];  //D[2:n-1]
+//    P[0] = P[n] = n+1;
+//    for(int k = 1; k < n; k++) {
+//        P[k] = k;
+//        IP[k] = k;
+//        D[k] = -1;
+//    }
+//    int i = n-1;
+//    T[n-1] = -2;
+//    T[2] = 0;
+//    int s = n, v = -1, m = 1;
+//
+//    while(true) {
+//        output(P);
+//        if(s == m) {
+//            m = n + 1 - m;
+//            v = -v;
+//        } else {
+//            P[s] = P[s+v];
+//            s = s + v;
+//            P[s] = n;
+//            continue;
+//        }
+//        if(i == 0) break;
+//        swap(P[IP[i]], P[IP[i] + D[i]]);
+//        swap(IP[i], IP[P[IP[i]]]);
+//        bool a = (i < n-1);
+//        bool b = (i < P[IP[i] + D[i]]);
+//        if(a) {
+//            D[i] = -D[i];
+//            if(T[i] < 0) {
+//                if(-T[i] != i-1) T[i-1] = T[i];
+//                T[i] = i - 1;
+//            }
+//        }
+//        if(!a && b) {
+//            T[k] = -i;
+//            i = k;
+//        } else if (a && !b) {
+//
+//        } else if (a && b) {
+//
+//        }
+//    }
+//
+//}
