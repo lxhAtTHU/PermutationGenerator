@@ -59,7 +59,6 @@ public:
             ccn /= carry[i+1];
             i++;
         }
-		printf("test\n");
     }	
  
     //重要函数
