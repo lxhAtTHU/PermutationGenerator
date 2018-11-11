@@ -132,8 +132,9 @@ void ChangeCarryNumber::fromPermutation(char p[], char algo) { //从排列生成
 
 char* ChangeCarryNumber::toPermutation(char algo) { //从中介数生成排列
     int N = get_N();
-    char* p = new char[N];
-    memset(p, 0, sizeof(p)+1); //初始全部置为'\0'，且p[N]作为字符串终止符也置为'\0'
+    //char* p = new char[N+1];
+    memset(p, 0, sizeof(char)*(N+1)); //初始全部置为'\0'，且p[N]作为字符串终止符也置为'\0'
+	p[N] = '\n';
     switch (algo) {
         case 'l': //【字典序法'l'】
         {

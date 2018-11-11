@@ -8,9 +8,10 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <algorithm>
-#include <cstring>
+#include <string>
 #include <time.h>
 #include <ctime>
+#include <mpi.h>
 using namespace std;
 
 #define LEFT false
@@ -19,44 +20,52 @@ using namespace std;
 void log(string s);
 
 
-void PermutationGenerator::generate_permutations(int method, string output_file){
+void PermutationGenerator::generate_permutations(int rank, int nprocs, int method, string output_file){
     clock_t start, end;
     start = clock();
     
   switch (method){
     case PermutationGenerator::RECURSION:
-      recursion(output_file);
+      recursion(rank, nprocs, output_file);
       break;
     case PermutationGenerator::CLASSIC_LEXICOGRAPHIC:
-      classic_lexi(output_file);
+      classic_lexi(rank, nprocs, output_file);
       break;
     case PermutationGenerator::SJT:
-      SJT_method(output_file);
+      SJT_method(rank, nprocs, output_file);
       break;
     case PermutationGenerator::MEDIATOR_LEXICOHRAPHIC:
-      mediator_lexi(output_file);
+      mediator_lexi(rank, nprocs, output_file);
       break;
     case PermutationGenerator::INCREMENTAL_CARRYING:
-      inc_carrying(output_file);
+      inc_carrying(rank, nprocs, output_file);
       break;
     case PermutationGenerator::DECREMENTAL_CARRYING:
-      dec_carrying(output_file);
+      dec_carrying(rank, nprocs, output_file);
       break;
     case PermutationGenerator::SWAPPING:
-      swapping(output_file);
+      swapping(rank, nprocs, output_file);
       break;
     case PermutationGenerator::HEAP:
-      Heap_method(output_file);
+      Heap_method(rank, nprocs, output_file);
       break;
     case PermutationGenerator::INTEGRATED:
-      integrated_method(output_file);
+      integrated_method(rank, nprocs, output_file);
       break;
     default:
       printf("Invalid method.\n");
   }
     
     end = clock();
-    cout << output_file.substr(3) << ":\t\t"  << (double)(end - start) / CLOCKS_PER_SEC << "s" << endl;
+	double _t = (double)(end-start)/CLOCKS_PER_SEC;
+	double t = 0;
+	double m = 0;
+	MPI_Reduce(&_t, &t, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&_t, &m, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	if(rank == 0){
+		printf("%s avg time: %.2fs\n", output_file.c_str(), t/nprocs);
+		printf("%s max time: %.2fs\n", output_file.c_str(), m);
+	}
     
   return;
 }
@@ -82,19 +91,92 @@ void recursion_step(char *x, bool *flag, int n, int depth, int fd){
   }
 }
 
-void PermutationGenerator::recursion(string output_file){
-  char *x = new char[n+1]; // one more for '\n'
-  x[n] = '\n';
-  bool *flag = new bool[n];
-  memset(flag, 0, n* sizeof(bool));
-  int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
-  recursion_step(x, flag, n, 1, fd);
+void PermutationGenerator::recursion(int rank, int nprocs, string output_file){
+ 	char *x = new char[n+1]; // one more for '\n'
+  	bool *flag = new bool[n];
+	memset(x, 0, n+1);
+	x[n] = '\n';
+  	memset(flag, 0, n* sizeof(bool));
+	
+	string _output_file = output_file + to_string(rank);
+    int fd = open(_output_file.c_str(), O_RDWR | O_CREAT, 0777);
+  	
+	// task partition
+	if(n < 9 || nprocs < 2)	
+  		recursion_step(x, flag, n, 1, fd);
+	else {
+		int total_task = 1;
+		for(int i=0; i<n; i++){
+			total_task *= (n-i);
+			if(total_task >= nprocs){
+				int base = total_task/nprocs;
+				int rest = total_task%nprocs;
+				if(rank < rest){
+					// task_num = base + 1
+					for(int task=(base+1)*rank; task<(base+1)*(rank+1); task++){
+						memset(x, 0, n+1);
+						x[n] = '\n';
+					  	memset(flag, 0, n* sizeof(bool));
+						int t = task;
+						for(int j=0; j<=i; j++){
+							int step = 1;
+							for(int k=j+1; k<=i; k++){
+								step *= (n-k);
+							}
+							int order = t/step+1;
+							for(int f_i=0; f_i<n; f_i++){
+								if(flag[f_i] == false)
+									order --;
+								if(order == 0){
+									x[j] = 'a' + f_i;
+									flag[f_i] = true;
+									break;
+								}
+							}
+							t %= step;
+						}
+						recursion_step(x, flag, n, i+2, fd);
+					}
+				} else {
+					// task_num = base
+					for(int task=rest+base*rank; task<rest+base*(rank+1); task++){
+						memset(x, 0, n+1);
+						x[n] = '\n';
+					  	memset(flag, 0, n* sizeof(bool));
+						int t = task;
+						for(int j=0; j<=i; j++){
+							int step = 1;
+							for(int k=j+1; k<=i; k++){
+								step *= (n-k);
+							}
+							int order = t/step+1;
+							for(int f_i=0; f_i<n; f_i++){
+								if(flag[f_i] == false)
+									order --;
+								if(order == 0){
+									x[j] = 'a' + f_i;
+									flag[f_i] = true;
+									break;
+								}
+							}
+							t %= step;
+						}
+						recursion_step(x, flag, n, i+2, fd);	
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	//int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
+  	//recursion_step(x, flag, n, 1, fd);
   delete []x;
   delete []flag;
   close(fd);
 }
 
-void PermutationGenerator::classic_lexi(string output_file){
+void PermutationGenerator::classic_lexi(int rank, int nprocs, string output_file){
   char *x = new char[n+1]; // one more for '\n'
   x[n] = '\n';
   int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
@@ -144,7 +226,7 @@ int moveable(char *x, bool *dirc, int n, int i){
   return -1;
 }
 
-void PermutationGenerator::SJT_method(string output_file){
+void PermutationGenerator::SJT_method(int rank, int nprocs, string output_file){
   char *x = new char[n+1]; // one more for '\n'
   x[n] = '\n';
   bool *dirc = new bool[n];
@@ -193,42 +275,40 @@ void log(string s) {
     cout << "[" << getTime() << "] " << s << endl;
 }
 
-void mediator_generating(string output_file, int inc_or_dec, char algo, int n) {
-    char* c = new char[n]; //构造初始排列
-    for(int i = 0; i < n; i++) {
-        c[i] = C[i+1];
-    }
-    c[n] = '\n';
-    ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec);
-    x.fromPermutation(c, algo);
-    delete []c;
-    int fd = open(output_file.c_str(), O_RDWR | O_CREAT, 0777);
+void mediator_generating(int rank, int nprocs, string output_file, int inc_or_dec, char algo, int n) {
+	long long total = fac[n];
+	long long chunk = total/nprocs;
+	long long start = rank*chunk;
+	long long end = (rank == (nprocs-1))? total : (rank+1)*chunk;
+	
+	string _output_file = output_file + to_string(rank);
+    ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec, start);
+    int fd = open(_output_file.c_str(), O_RDWR | O_CREAT, 0777);
     
     //生成全排列
-    write(fd, c, n+1);
-    for(long long i = 1; i < fac[n]; i++) {
-        ++x;
+    for(long long i = start; i < end; i++) {
         char* next = x.toPermutation(algo);
-        next[n] = '\n';
-        write(fd, next, n+1);
+        //pwrite(fd, next, n+1, i*(n+1));
+		write(fd, next, n+1);
+		++x;
     }
     close(fd);
 }
 
-void PermutationGenerator::mediator_lexi(string output_file){
-    mediator_generating(output_file, INC, 'l', n);
+void PermutationGenerator::mediator_lexi(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, INC, 'l', n);
 }
 
-void PermutationGenerator::inc_carrying(string output_file){
-    mediator_generating(output_file, INC, 'i', n);
+void PermutationGenerator::inc_carrying(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, INC, 'i', n);
 }
 
-void PermutationGenerator::dec_carrying(string output_file){
-    mediator_generating(output_file, DEC, 'd', n);
+void PermutationGenerator::dec_carrying(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, DEC, 'd', n);
 }
 
-void PermutationGenerator::swapping(string output_file){
-    mediator_generating(output_file, DEC, 'n', n);
+void PermutationGenerator::swapping(int rank, int nprocs, string output_file){
+    mediator_generating(rank, nprocs, output_file, DEC, 'n', n);
 }
 
 
@@ -247,7 +327,7 @@ void Heap_step(char *x, int n, int len_of_x, int fd) {
     }
 }
 
-void PermutationGenerator::Heap_method(string output_file){
+void PermutationGenerator::Heap_method(int rank, int nprocs, string output_file){
     char *x = new char[n+1]; // one more for '\n'
     x[n] = '\n';
     for(int i = 0; i < n; ++i) {
@@ -283,7 +363,7 @@ void PermutationGenerator::Heap_method(string output_file){
 
 char starter[1814402][12];
 
-void PermutationGenerator::integrated_method(string output_file) {
+void PermutationGenerator::integrated_method(int rank, int nprocs, string output_file) {
     long long f = fac[n-1]/2;
 //    char starter[f][n+1];
     
@@ -294,19 +374,16 @@ void PermutationGenerator::integrated_method(string output_file) {
     for(int i = 0; i < n; i++) {
         starter[0][i] = C[i+1];
     }
-    //cout << "starter[0]: " << starter[0] << endl;
     int cnt = 1;
     for(int k = n-3; k >= 1; k--) {
         int current_cnt = cnt;
         for(int j = 0; j < current_cnt; j++) {
             strcpy(starter[cnt], starter[j]);
             swap(starter[cnt][k], starter[cnt][k+1]);
-            //cout << "starter[" << cnt << "]: " << starter[cnt] << endl;
             cnt++;
             for(int i = k+1; i < n-1; i++) {
                 strcpy(starter[cnt], starter[cnt-1]);
                 swap(starter[cnt][i], starter[cnt][i+1]);
-                //cout << "starter[" << cnt << "]: " << starter[cnt] << endl;
                 cnt++;
             }
         }
@@ -318,89 +395,18 @@ void PermutationGenerator::integrated_method(string output_file) {
     x[n] = '\n';
     for(int k = 0; k < cnt; k++) {
         for(int j = 0; j < n; j++) { //CP 初始位置
-            //【CP操作】
-            int i = j;
-            int l = 0;
-            do {
-                //putchar(starter[k][i]);
-                x[l++] = starter[k][i];
-                i++;
-                if(i >= n) i = 0;
-            } while(i != j);
-            //putchar('\n');
-            write(fd, x, n+1);
-            //【RoCP操作】
-            i = j;
-            l = 0;
-            do {
-                //putchar(starter[k][i]);
-                x[l++] = starter[k][i];
-                i--;
-                if(i < 0) i = n-1;
-            } while(i != j);
-            //putchar('\n');
-            write(fd, x, n+1);
+			strcpy(x, starter[k]);
+			x[n] = '\n';
+			// 求一个串循环左移j位，相当于前j位先逆序，后n-j位再逆序，然后整体求逆序
+			// 利用这个性质，先得到RoCP的值
+			reverse(x, x+j);
+			reverse(x+j, x+n);
+			write(fd, x, n+1);
+			// 再得到循环移动的值
+			reverse(x, x+n);
+			write(fd, x, n+1);
         }
     }
-    //fclose(stdout);
-    //fflush(fp);
-    //fp = freopen("CON", "w", stdout);
-    //cout << "hello" << endl;
+	delete []x;
 }
 
-
-//void output(int a[]) {
-//
-//}
-//
-//void fast_generator(int n) {
-//    //initialization
-//    int P[n+1];  //P[1:n-1]
-//    int IP[n]; //IP[1:n-1]
-//    int T[n];  //T[1:n-1]
-//    int D[n];  //D[2:n-1]
-//    P[0] = P[n] = n+1;
-//    for(int k = 1; k < n; k++) {
-//        P[k] = k;
-//        IP[k] = k;
-//        D[k] = -1;
-//    }
-//    int i = n-1;
-//    T[n-1] = -2;
-//    T[2] = 0;
-//    int s = n, v = -1, m = 1;
-//
-//    while(true) {
-//        output(P);
-//        if(s == m) {
-//            m = n + 1 - m;
-//            v = -v;
-//        } else {
-//            P[s] = P[s+v];
-//            s = s + v;
-//            P[s] = n;
-//            continue;
-//        }
-//        if(i == 0) break;
-//        swap(P[IP[i]], P[IP[i] + D[i]]);
-//        swap(IP[i], IP[P[IP[i]]]);
-//        bool a = (i < n-1);
-//        bool b = (i < P[IP[i] + D[i]]);
-//        if(a) {
-//            D[i] = -D[i];
-//            if(T[i] < 0) {
-//                if(-T[i] != i-1) T[i-1] = T[i];
-//                T[i] = i - 1;
-//            }
-//        }
-//        if(!a && b) {
-//            T[k] = -i;
-//            i = k;
-//        } else if (a && !b) {
-//
-//        } else if (a && b) {
-//
-//        }
-//    }
-//
-//}
