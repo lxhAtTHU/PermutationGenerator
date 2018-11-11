@@ -59,9 +59,12 @@ void PermutationGenerator::generate_permutations(int rank, int nprocs, int metho
     end = clock();
 	double _t = (double)(end-start)/CLOCKS_PER_SEC;
 	double t = 0;
+	double m = 0;
 	MPI_Reduce(&_t, &t, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&_t, &m, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 	if(rank == 0){
 		printf("%s avg time: %.2fs\n", output_file.c_str(), t/nprocs);
+		printf("%s max time: %.2fs\n", output_file.c_str(), m);
 	}
     
   return;
@@ -99,7 +102,7 @@ void PermutationGenerator::recursion(int rank, int nprocs, string output_file){
     int fd = open(_output_file.c_str(), O_RDWR | O_CREAT, 0777);
   	
 	// task partition
-	if(n < 9)	
+	if(n < 9 || nprocs < 2)	
   		recursion_step(x, flag, n, 1, fd);
 	else {
 		int total_task = 1;
@@ -132,7 +135,6 @@ void PermutationGenerator::recursion(int rank, int nprocs, string output_file){
 							}
 							t %= step;
 						}
-						printf("%d: %s\n", task, x);
 						recursion_step(x, flag, n, i+2, fd);
 					}
 				} else {
@@ -159,7 +161,6 @@ void PermutationGenerator::recursion(int rank, int nprocs, string output_file){
 							}
 							t %= step;
 						}
-						printf("%d: %s\n", task, x);
 						recursion_step(x, flag, n, i+2, fd);	
 					}
 				}
@@ -281,7 +282,6 @@ void mediator_generating(int rank, int nprocs, string output_file, int inc_or_de
 	long long end = (rank == (nprocs-1))? total : (rank+1)*chunk;
 	
 	string _output_file = output_file + to_string(rank);
-	cout << _output_file << endl;
     ChangeCarryNumber x = ChangeCarryNumber(n, inc_or_dec, start);
     int fd = open(_output_file.c_str(), O_RDWR | O_CREAT, 0777);
     
